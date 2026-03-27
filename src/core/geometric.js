@@ -93,7 +93,7 @@ export function shear(matrix, w, h, cx, cy) {
 
       // 2. Mapeamento Inverso do Cisalhamento
       // Invertemos os sinais matemáticos (+ em vez de -) para compensar
-      // o eixo Y invertido do monitor, alinhando com a intuição humana.
+      // o eixo Y invertido do monitor
       let srcX = dx + (cx * dy);
       let srcY = dy + (cy * dx);
 
@@ -173,15 +173,6 @@ export function rotation(matrix, w, h, angle) {
     // Encontra o centro fracionário para rotacionar em torno dele
     let centerX = (w - 1) / 2;
     let centerY = (h - 1) / 2;
-
-    // === A MÁGICA DO AUTO-ZOOM PARA PREENCHER O CANVAS ===
-    // O problema dos cantos pretos surge porque o quadrado original rotacionado é
-    // menor que o canvas. Para preencher o canvas, precisamos dimensionar a imagem
-    // de Lenna por um fator de zoom. Para um quadrado de lado L rotacionado de theta,
-    // o lado do novo canvas resultante que contém a imagem sem corte é L(|cos| + |sin|).
-    // Para que a imagem de Lenna preencha o canvas original de tamanho L, precisamos 
-    // dimensionar a imagem de Lenna rotacionada por S = |cos| + |sin|.
-    // O zoom factor é o mapeamento direto de dimensionamento (dx' = dx * S).
     
     const zoomFactor = Math.abs(cos) + Math.abs(sin);
 

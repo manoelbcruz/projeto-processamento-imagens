@@ -38,7 +38,7 @@ export default function ImageViewer({ matrix, w, h, type, title }) {
     if (hoverPos) setPos(hoverPos);
   };
 
-  if (!matrix) {
+  if (!matrix || matrix.length === 0 || !matrix[0]) {
     return (
       <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700 h-full justify-center items-center min-w-0">
         <p className="text-gray-500 text-sm">Aguardando {title}...</p>

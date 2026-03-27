@@ -22,7 +22,7 @@ function matrixSub(matrixA, matrixB, w, h) {
 /**
  * Motor base para Morfologia Binária (0 e 1)
  */
-export function operationBinary(matrix, w, h, k, operate = 'erosion') {
+export function operationBinary(matrix, w, h, k, operate) {
     const res = Array.from({ length: h }, () => Array(w).fill(0));
     const kernelSum = k.reduce((a, b) => a + b, 0);
 
@@ -56,13 +56,13 @@ export function operationBinary(matrix, w, h, k, operate = 'erosion') {
 
 export const dilation = (img, w, h, k) => operationBinary(img, w, h, k, 'erosion');
 export const erosion = (img, w, h, k) => operationBinary(img, w, h, k, 'dilation');
-export const opening = (img, w, h, k) => dilation(erosion(img, w, h, k), w, h, k);
-export const closing = (img, w, h, k) => erosion(dilation(img, w, h, k), w, h, k);
+export const opening = (img, w, h, k) => erosion(dilation(img, w, h, k), w, h, k);
+export const closing = (img, w, h, k) => dilation(erosion(img, w, h, k), w, h, k);
 
 export const complement = (img) => img.map((row) => row.map((val) => val === 0 ? 1 : 0));
-export const external = (img, w, h, k) => matrixSub(dilation(img, w, h, k), img, w, h);
-export const internal = (img, w, h, k) => matrixSub(img, erosion(img, w, h, k), w, h);
-export const gradient = (img, w, h, k) => matrixSub(dilation(img, w, h, k), erosion(img, w, h, k), w, h);
+export const external = (img, w, h, k) => matrixSub(erosion(img, w, h, k), img, w, h);
+export const internal = (img, w, h, k) => matrixSub(img, dilation(img, w, h, k), w, h);
+export const gradient = (img, w, h, k) => matrixSub(erosion(img, w, h, k), dilation(img, w, h, k), w, h);
 export const thinning = (img, w, h, k) => matrixSub(img, gradient(img, w, h, k), w, h);
 
 
@@ -73,7 +73,7 @@ export const thinning = (img, w, h, k) => matrixSub(img, gradient(img, w, h, k),
 /**
  * Motor base para Morfologia em Tons de Cinza (0 - 255)
  */
-export function operationGray(matrix, w, h, k, operate = 'dilation') {
+export function operationGray(matrix, w, h, k, operate) {
     let res = [];
 
     for (let i = 0; i < h; i++) {
@@ -82,23 +82,22 @@ export function operationGray(matrix, w, h, k, operate = 'dilation') {
             let neighbors = [];
 
             // Coleta os vizinhos conforme o kernel (array 1D de 9 posições)
-            if (k[0]) neighbors.push(i > 0 && j > 0 ? matrix[i - 1][j - 1] : 0);
-            if (k[1]) neighbors.push(i > 0 ? matrix[i - 1][j] : 0);
-            if (k[2]) neighbors.push(i > 0 && j < w - 1 ? matrix[i - 1][j + 1] : 0);
+            if (k[0] && i > 0 && j > 0) neighbors.push(matrix[i - 1][j - 1]);
+            if (k[1] && i > 0) neighbors.push(matrix[i - 1][j]);
+            if (k[2] && i > 0 && j < w - 1) neighbors.push(matrix[i - 1][j + 1]);
 
-            if (k[3]) neighbors.push(j > 0 ? matrix[i][j - 1] : 0);
+            if (k[3] && j > 0) neighbors.push(matrix[i][j - 1]);
             if (k[4]) neighbors.push(matrix[i][j]);
-            if (k[5]) neighbors.push(j < w - 1 ? matrix[i][j + 1] : 0);
+            if (k[5] && j < w - 1) neighbors.push(matrix[i][j + 1]);
 
-            if (k[6]) neighbors.push(i < h - 1 && j > 0 ? matrix[i + 1][j - 1] : 0);
-            if (k[7]) neighbors.push(i < h - 1 ? matrix[i + 1][j] : 0);
-            if (k[8]) neighbors.push(i < h - 1 && j < w - 1 ? matrix[i + 1][j + 1] : 0);
+            if (k[6] && i < h - 1 && j > 0) neighbors.push(matrix[i + 1][j - 1]);
+            if (k[7] && i < h - 1) neighbors.push(matrix[i + 1][j]);
+            if (k[8] && i < h - 1 && j < w - 1) neighbors.push(matrix[i + 1][j + 1]);
 
-            if (neighbors.length === 0) {
-                res[i][j] = matrix[i][j];
-            } else if (operate === 'erosion') {
+            // Se for Erosão, busca o mínimo dos pixels reais que caíram na lupa
+            if (operate === 'erosion') {
                 res[i][j] = Math.min(...neighbors);
-            } else {
+            } else { // Dilatação
                 res[i][j] = Math.max(...neighbors);
             }
         }

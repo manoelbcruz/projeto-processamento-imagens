@@ -117,7 +117,7 @@ export function highBoostFilter(matrix, w, h, A = 1.5, doNormalize = true) {
     if (isNaN(A)) A = 1.5;
 
     // Etapa 1: Obter a versão suavizada (passa-baixa) da imagem.
-    // Usando gaussianBlur como definido no seu código
+    // Usando gaussianBlur
     const blurred = convolution(matrix, w, h, gaussianBlur, false); 
     const result = [];
 

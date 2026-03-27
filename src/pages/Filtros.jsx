@@ -33,8 +33,8 @@ export default function Filtros() {
       const filterValue = parseInt(selectedFilter);
       let result = [];
 
-      if (filterValue === 0) {
-        result = data;
+      if (isNaN(filterValue) || filterValue === 0) {
+        result = data; // Sem filtro, apenas a imagem original
       } else if (filterValue === 23) { 
         result = medianFilter(data, w, h, doNormalize);
       } else if (filterValue === 24) { 
