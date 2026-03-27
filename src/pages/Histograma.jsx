@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { parsePGM, drawMatrixToCanvas } from '../core/utils';
 import { getHistogram, equalizeImage, drawHistogramToCanvas } from '../core/histogram';
+import ImageViewer from '../components/ImageViewer';
 
 export default function Histograma() {
   // Referências para os Canvases de Imagem
@@ -139,33 +140,35 @@ export default function Histograma() {
         
         {/* Coluna 1: Original */}
         <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700 space-y-4">
-          <h3 className="text-lg font-medium text-gray-300 text-center">Imagem Original</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasOriginalRef} className="block"></canvas>
-          </div>
+          <ImageViewer 
+            matrix={imageState?.data} 
+            w={imageState?.w} 
+            h={imageState?.h} 
+            type={imageState?.type} 
+            title="Imagem Original" 
+          />
           
           <h3 className="text-sm font-medium text-gray-400 text-center pt-2 border-t border-gray-800">Gráfico do Histograma</h3>
           <div className="bg-gray-950 rounded border border-gray-800 p-2 flex justify-center">
              {/* Canvas do gráfico fixo em 256x150 para caber todas as 256 barras */}
              <canvas ref={histOriginalRef} width="256" height="150" className="block"></canvas>
           </div>
-
-          <PixelTable matrix={imageState?.data} title="Matriz de Pixels Original" />
         </div>
 
         {/* Coluna 2: Processada */}
         <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700 space-y-4">
-          <h3 className="text-lg font-medium text-gray-300 text-center">Imagem Equalizada</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasProcessedRef} className="block"></canvas>
-          </div>
+          <ImageViewer 
+            matrix={processedMatrix} 
+            w={imageState?.w} 
+            h={imageState?.h} 
+            type={imageState?.type} 
+            title="Imagem Equalizada" 
+          />
 
           <h3 className="text-sm font-medium text-gray-400 text-center pt-2 border-t border-gray-800">Gráfico do Histograma Equalizado</h3>
           <div className="bg-gray-950 rounded border border-gray-800 p-2 flex justify-center">
              <canvas ref={histProcessedRef} width="256" height="150" className="block"></canvas>
           </div>
-
-          <PixelTable matrix={processedMatrix} title="Matriz de Pixels Equalizada" />
         </div>
 
       </div>

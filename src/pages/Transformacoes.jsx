@@ -9,6 +9,7 @@ import {
   dynamicRange, 
   linear 
 } from '../core/transformations';
+import ImageViewer from '../components/ImageViewer';
 
 export default function Transformacoes() {
   const canvasOriginalRef = useRef(null);
@@ -221,21 +222,20 @@ export default function Transformacoes() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-lg font-medium text-gray-300 mb-4 text-center">Imagem Original</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasOriginalRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={imageState?.data} title="Matriz de Pixels Original" />
-        </div>
-
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-lg font-medium text-gray-300 mb-4 text-center">Imagem Transformada</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasProcessedRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={processedMatrix} title="Matriz Resultante" />
-        </div>
+        <ImageViewer 
+          matrix={imageState?.data} 
+          w={imageState?.w} 
+          h={imageState?.h} 
+          type={imageState?.type} 
+          title="Imagem Original" 
+        />
+        <ImageViewer 
+          matrix={processedMatrix} 
+          w={imageState?.w} 
+          h={imageState?.h} 
+          type={imageState?.type} 
+          title="Imagem Processada" 
+        />
       </div>
     </div>
   );

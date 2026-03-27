@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { parsePGM, drawMatrixToCanvas } from '../core/utils';
 import { applyComposition, operators } from '../core/composition';
+import ImageViewer from '../components/ImageViewer';
 
 export default function Combinacao() {
   const canvasARef = useRef(null);
@@ -163,36 +164,28 @@ export default function Combinacao() {
         </div>
       </div>
 
-      {/* Visualização de Matrizes e Imagens */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        
-        {/* Imagem A */}
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-md font-medium text-gray-300 mb-4 text-center">Imagem A</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '200px' }}>
-             <canvas ref={canvasARef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={imageA?.data} title="Matriz A" />
-        </div>
-
-        {/* Imagem B */}
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-md font-medium text-gray-300 mb-4 text-center">Imagem B</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '200px' }}>
-             <canvas ref={canvasBRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={imageB?.data} title="Matriz B" />
-        </div>
-
-        {/* Resultado */}
-        <div className="flex flex-col bg-indigo-950 p-4 rounded-lg border border-indigo-700">
-          <h3 className="text-md font-bold text-indigo-300 mb-4 text-center">Resultado (A op B)</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '200px' }}>
-             <canvas ref={canvasResultRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={processedMatrix} title="Matriz Resultante" />
-        </div>
-
+        <ImageViewer 
+          matrix={imageA?.data} 
+          w={imageA?.w} 
+          h={imageA?.h} 
+          type={imageA?.type} 
+          title="Imagem A" 
+        />
+        <ImageViewer 
+          matrix={imageB?.data} 
+          w={imageB?.w} 
+          h={imageB?.h} 
+          type={imageB?.type} 
+          title="Imagem B" 
+        />
+        <ImageViewer 
+          matrix={processedMatrix} 
+          w={imageA?.w} 
+          h={imageA?.h} 
+          type={imageA?.type} 
+          title="Resultado da Composição" 
+        />
       </div>
     </div>
   );

@@ -1,13 +1,14 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { parsePGM, drawMatrixToCanvas } from '../core/utils';
 import { translation, scale, reflection, shear, rotation } from '../core/geometric';
+import ImageViewer from '../components/ImageViewer';
 
 export default function TransformacoesGeometricas() {
   const canvasOriginalRef = useRef(null);
   const canvasProcessedRef = useRef(null);
 
   const [imageState, setImageState] = useState(null);
-  const [processedResult, setProcessedResult] = useState(null); // Guarda { matrix, w, h }
+  const [processedResult, setProcessedResult] = useState(null);
   const [selectedTransform, setSelectedTransform] = useState('0');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -17,7 +18,7 @@ export default function TransformacoesGeometricas() {
   const [sx, setSx] = useState(1.5);
   const [sy, setSy] = useState(1.5);
   const [axis, setAxis] = useState('x');
-  const [cx, setCx] = useState(0.2);
+  const [cx, setCx] = useState(0.5);
   const [cy, setCy] = useState(0.0);
   const [angle, setAngle] = useState(45);
 
@@ -190,21 +191,21 @@ export default function TransformacoesGeometricas() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-lg font-medium text-gray-300 mb-4 text-center">Original ({imageState?.w || 0}x{imageState?.h || 0})</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasOriginalRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={imageState?.data} title="Matriz de Pixels Original" />
-        </div>
-
-        <div className="flex flex-col bg-gray-900 p-4 rounded-lg border border-gray-700">
-          <h3 className="text-lg font-medium text-gray-300 mb-4 text-center">Transformada ({processedResult?.w || 0}x{processedResult?.h || 0})</h3>
-          <div className="bg-black flex items-center justify-center overflow-auto rounded shadow-inner mb-4" style={{ minHeight: '256px' }}>
-             <canvas ref={canvasProcessedRef} className="block"></canvas>
-          </div>
-          <PixelTable matrix={processedResult?.matrix} title="Matriz Resultante" />
-        </div>
+        <ImageViewer 
+          matrix={imageState?.data} 
+          w={imageState?.w} 
+          h={imageState?.h} 
+          type={imageState?.type} 
+          title="Imagem Original" 
+        />
+        
+        <ImageViewer 
+          matrix={processedResult?.matrix} 
+          w={processedResult?.w} 
+          h={processedResult?.h} 
+          type={imageState?.type} 
+          title="Imagem Transformada" 
+        />
       </div>
     </div>
   );

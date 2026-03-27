@@ -77,26 +77,87 @@ export function reflection(matrix, w, h, axis = 'x') {
  * cx = fator de cisalhamento horizontal, cy = vertical.
  */
 export function shear(matrix, w, h, cx, cy) {
-    let res = [];
-    for (let y = 0; y < h; y++) {
-        res[y] = [];
-        for (let x = 0; x < w; x++) {
-            // Mapeamento Inverso resolvendo o sistema de equações lineares:
-            // destX = srcX + cx * srcY  ==> srcX = destX - cx * srcY
-            // destY = srcY + cy * srcX  (Considerando transformações independentes simples)
-            
-            let srcX = x - cx * y;
-            let srcY = y - cy * x;
-            
-            res[y][x] = getPixel(matrix, srcX, srcY, w, h);
-        }
+  const result = [];
+  
+  // Encontramos o centro exato da imagem para usar como pivô (prego central)
+  const halfW = w / 2;
+  const halfH = h / 2;
+
+  for (let y = 0; y < h; y++) {
+    result[y] = [];
+    for (let x = 0; x < w; x++) {
+      // 1. Deslocamos a coordenada para o centro
+      // Agora o (0,0) matemático é o meio da testa da pessoa na foto
+      let dx = x - halfW;
+      let dy = y - halfH;
+
+      // 2. Mapeamento Inverso do Cisalhamento
+      // Invertemos os sinais matemáticos (+ em vez de -) para compensar
+      // o eixo Y invertido do monitor, alinhando com a intuição humana.
+      let srcX = dx + (cx * dy);
+      let srcY = dy + (cy * dx);
+
+      // 3. Devolvemos a coordenada para o espaço real do Canvas
+      srcX = Math.round(srcX + halfW);
+      srcY = Math.round(srcY + halfH);
+
+      // 4. Aritmética Modular
+      // Se a imagem esticar para fora da tela, o operador % amarra os
+      // limites criando um cilindro, fazendo o pixel entrar pelo lado oposto!
+      srcX = ((srcX % w) + w) % w;
+      srcY = ((srcY % h) + h) % h;
+
+      // Garantimos que a coordenada seja um número inteiro válido para a matriz
+      srcX = Math.floor(srcX);
+      srcY = Math.floor(srcY);
+
+      result[y][x] = matrix[srcY][srcX];
     }
-    return res;
+  }
+  return result;
 }
 
 /**
- * 5. Rotação
- * Rotaciona a imagem em torno do seu centro.
+ * Função Auxiliar: Interpolação Bilinear (Spline Linear Bidimensional)
+ * Calcula a cor sub-pixel baseada na distância dos 4 vizinhos.
+ */
+function getPixelBilinear(matrix, w, h, x, y) {
+    // Se a coordenada cair nas bordas fora da imagem, preenchemos com preto (0)
+    if (x < 0 || x >= w - 1 || y < 0 || y >= h - 1) {
+        return 0;
+    }
+
+    // Pega as coordenadas inteiras (o "quadrado" ao redor do ponto decimal)
+    let x1 = Math.floor(x);
+    let y1 = Math.floor(y);
+    let x2 = x1 + 1;
+    let y2 = y1 + 1;
+
+    // Calcula os "pesos" fracionários (ex: se x = 14.7, dx = 0.7)
+    let dx = x - x1;
+    let dy = y - y1;
+
+    // Pega o valor da cor dos 4 pixels vizinhos reais
+    let p11 = matrix[y1][x1]; // Topo-Esquerda
+    let p21 = matrix[y1][x2]; // Topo-Direita
+    let p12 = matrix[y2][x1]; // Base-Esquerda
+    let p22 = matrix[y2][x2]; // Base-Direita
+
+    // Interpolação no Eixo X (Horizontal)
+    let r1 = p11 * (1 - dx) + p21 * dx;
+    let r2 = p12 * (1 - dx) + p22 * dx;
+
+    // Interpolação no Eixo Y (Vertical) juntando o resultado
+    let val = r1 * (1 - dy) + r2 * dy;
+
+    return Math.round(val);
+}
+
+
+
+/**
+ * 5. Rotação (Com Interpolação Bilinear)
+ * Rotaciona a imagem em torno do seu centro eliminando o serrilhado.
  * @param {number} angle Graus da rotação (ex: 45, 90, -30)
  */
 export function rotation(matrix, w, h, angle) {
@@ -104,10 +165,25 @@ export function rotation(matrix, w, h, angle) {
     let rad = angle * (Math.PI / 180);
     let cos = Math.cos(rad);
     let sin = Math.sin(rad);
+    
+    // A Matriz de Transformação Inversa do Mapeamento Inverso é:
+    // T_inv = [ cos, -sin ]
+    //         [ sin,  cos ]
 
-    // Encontra o centro da imagem para rotacionar em torno dele
+    // Encontra o centro fracionário para rotacionar em torno dele
     let centerX = (w - 1) / 2;
     let centerY = (h - 1) / 2;
+
+    // === A MÁGICA DO AUTO-ZOOM PARA PREENCHER O CANVAS ===
+    // O problema dos cantos pretos surge porque o quadrado original rotacionado é
+    // menor que o canvas. Para preencher o canvas, precisamos dimensionar a imagem
+    // de Lenna por um fator de zoom. Para um quadrado de lado L rotacionado de theta,
+    // o lado do novo canvas resultante que contém a imagem sem corte é L(|cos| + |sin|).
+    // Para que a imagem de Lenna preencha o canvas original de tamanho L, precisamos 
+    // dimensionar a imagem de Lenna rotacionada por S = |cos| + |sin|.
+    // O zoom factor é o mapeamento direto de dimensionamento (dx' = dx * S).
+    
+    const zoomFactor = Math.abs(cos) + Math.abs(sin);
 
     let res = [];
     for (let y = 0; y < h; y++) {
@@ -117,17 +193,25 @@ export function rotation(matrix, w, h, angle) {
             let dx = x - centerX;
             let dy = y - centerY;
 
-            // Mapeamento Inverso usando a matriz de rotação inversa:
-            // x' = x*cos(θ) + y*sin(θ)
-            // y' = -x*sin(θ) + y*cos(θ)
-            let srcX = (dx * cos) + (dy * sin);
-            let srcY = -(dx * sin) + (dy * cos);
+            // 1. Aplica o Zoom (Mapeamento Inverso do Zoom)
+            // Para o mapeamento inverso, precisamos calcular de onde no espaço da
+            // imagem original com zoom puxar o pixel. Então, dividimos pelo zoomFactor.
+            let zoomedDx = dx / zoomFactor;
+            let zoomedDy = dy / zoomFactor;
 
-            // Retorna para as coordenadas reais
+            // 2. Mapeamento Inverso da Rotação (usando a matriz inversa)
+            // x_origem = cos(θ) * zoomedDx - sin(θ) * zoomedDy
+            // y_origem = sin(θ) * zoomedDx + cos(θ) * zoomedDy
+            let srcX = (zoomedDx * cos) - (zoomedDy * sin);
+            let srcY = (zoomedDx * sin) + (zoomedDy * cos);
+
+            // Retorna para as coordenadas reais do canvas
             srcX += centerX;
             srcY += centerY;
 
-            res[y][x] = getPixel(matrix, srcX, srcY, w, h);
+            // Aplica a interpolação Bilinear (Spline Linear) de alta qualidade
+            // Interpolação Bilinear
+            res[y][x] = getPixelBilinear(matrix, w, h, srcX, srcY);
         }
     }
     return res;
